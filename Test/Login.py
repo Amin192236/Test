@@ -4,7 +4,7 @@ from datetime import date
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
-from Pages.sql import db
+from Pages.sql import SqlServer
 
 from time import sleep
 from Locators import *
@@ -24,15 +24,16 @@ class TestLogin(unittest.TestCase):
         cls.driver = driver
         cls.driver.maximize_window()
         cls.driver.implicitly_wait(5)
+        cls.tests_texts = []
 
 ###Login
 
     def test01_login(self):
         self.driver.get(url_test)
-        login = LoginPage(driver=self.driver)
-        login.enter_login_phone_number("09379161530")
-        login.enter_login_check_phone_number()
+        self.tests_texts.append("test")
 
+    def test02_login(self):
+        self.driver.get(url_test)
 
 
     @classmethod
@@ -42,15 +43,4 @@ class TestLogin(unittest.TestCase):
         cls.driver.quit()
 
 
-try:
-    sleep(2)
-    msg = 'pass'
-except:
-    msg = 'fail'
-
-now = datetime.datetime.now()
-current_time = now.strftime("%H:%M:%S")
-end_time = datetime.datetime.now().replace(microsecond=0)
-duration = (end_time - start_time).total_seconds()
-db('Inquiry', 'login', date.today(), current_time, duration, msg)
-
+SqlServer.run_tests_and_insert_into_sql_server(TestLogin, 'test_login')
