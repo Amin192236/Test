@@ -1,7 +1,12 @@
+import json
 import jsonpickle
 import unittest
 import pyodbc
 import datetime
+
+
+def convert_json_to_text(json_data):
+    return json.dumps(json_data)
 
 
 class SqlServer:
@@ -14,14 +19,12 @@ class SqlServer:
         result = runner.run(suite)
 
         e = datetime.datetime.now()
+        messages_text = '\n'.join(Test.tests_texts)
 
         test_results_json = {
             "type": collection_name,
             "errors_len": len(result.errors),
-            "errors": jsonpickle.decode(jsonpickle.encode(result.errors, unpicklable=False)),
-            "failures": jsonpickle.decode(jsonpickle.encode(result.failures, unpicklable=False)),
-            "skipped": jsonpickle.decode(jsonpickle.encode(result.skipped, unpicklable=False)),
-            "messages": "Test.tests_texts",
+            "messages": messages_text,
             "tests_run": result.testsRun,
             "was_successful": result.wasSuccessful(),
             "time": e.strftime("%Y-%m-%d %H:%M:%S"),
@@ -50,25 +53,23 @@ class SqlServer:
                        f"id INT IDENTITY(1,1) PRIMARY KEY, "
                        f"type NVARCHAR(MAX), "
                        f"errors_len INT, "
-                       f"errors NVARCHAR(MAX), "
-                       f"failures NVARCHAR(MAX), "
-                       f"skipped NVARCHAR(MAX), "
                        f"messages NVARCHAR(MAX), "
                        f"tests_run INT, "
                        f"was_successful INT, "
                        f"time DATETIME);")
         cursor.commit()
 
-        # Insert into the table
+        # Insert into the table using execute
         cursor.execute(
-            f"INSERT INTO {collection_name} (type, errors_len, errors, failures, skipped, messages, tests_run, was_successful, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (test_results_json["type"], test_results_json["errors_len"], test_results_json["errors"],
-             test_results_json["failures"], test_results_json["skipped"], test_results_json["messages"],
-             test_results_json["tests_run"], test_results_json["was_successful"], test_results_json["time"]))
+            f"INSERT INTO {collection_name} (type, errors_len, messages, tests_run, was_successful, time) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (test_results_json["type"], test_results_json["errors_len"],
+             test_results_json["messages"],
+             test_results_json["tests_run"], test_results_json["was_successful"], test_results_json["time"])
+        )
 
         cursor.commit()
         connection.close()
 
         # Return True if the tests were successful, otherwise False
         return result.wasSuccessful()
-
