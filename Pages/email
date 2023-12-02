@@ -1,0 +1,31 @@
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+sender_email = "your_email@gmail.com"
+receiver_email = "recipient_email@example.com"
+subject = "Test Email"
+body = "Hello, this is a test email sent from Python!"
+
+smtp_server = "sandbox.smtp.mailtrap.io"
+smtp_port = 2525
+smtp_username = "1bf46da7a2105f"
+smtp_password = "baf13cf9cc8ff6"
+
+message = MIMEMultipart()
+message["From"] = sender_email
+message["To"] = receiver_email
+message["Subject"] = subject
+
+try:
+    print("Connecting to SMTP server...")
+    with smtplib.SMTP(smtp_server, smtp_port, timeout=10) as server:
+        print("Connected. Starting TLS...")
+        server.starttls()
+        print("TLS connection established. Logging in...")
+        server.login(smtp_username, smtp_password)
+        print("Logged in. Sending email...")
+        server.sendmail(sender_email, receiver_email, message.as_string())
+    print("Email sent successfully!")
+except Exception as e:
+    print(f"An error occurred: {e}")
